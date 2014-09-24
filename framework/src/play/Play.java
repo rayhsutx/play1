@@ -62,6 +62,10 @@ public class Play {
      */
     public static boolean started = false;
     /**
+     * Is the http server enabled
+     */
+    public static boolean httpServerEnabled = true;
+    /**
      * True when the one and only shutdown hook is enabled
      */
     private static boolean shutdownHookEnabled = false;

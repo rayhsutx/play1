@@ -3,6 +3,7 @@ package play.jobs;
 import java.util.Date;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import play.Invoker;
@@ -19,6 +20,14 @@ import com.jamonapi.MonitorFactory;
 
 /**
  * A job is an asynchronously executed unit of work
+ * <br /><br />
+ * If you want to exclude particular jobs running when play started
+ * you could add 'application.[JOB_CLASS_NAME]' in application.conf
+ * <br /><br />
+ * for example,
+ * you have a Job class jobs.MyJob in your play application, so you could
+ * set 'application.jobs.MyJob=false' to disable loading this job when
+ * play application started.
  * @param <V> The job result type (if any)
  */
 public class Job<V> extends Invoker.Invocation implements Callable<V> {
@@ -61,14 +70,7 @@ public class Job<V> extends Invoker.Invocation implements Callable<V> {
      */
     public Promise<V> now() {
         final Promise<V> smartFuture = new Promise<V>();
-        JobsPlugin.executor.submit(new Callable<V>() {
-            public V call() throws Exception {
-                V result =  Job.this.call();
-                smartFuture.invoke(result);
-                return result;
-            }
-            
-        });
+        JobsPlugin.executor.submit(new JobWrapper<V>(smartFuture, this));
 
         return smartFuture;
     }
@@ -88,15 +90,7 @@ public class Job<V> extends Invoker.Invocation implements Callable<V> {
     public Promise<V> in(int seconds) {
         final Promise<V> smartFuture = new Promise<V>();
 
-        JobsPlugin.executor.schedule(new Callable<V>() {
-
-            public V call() throws Exception {
-                V result =  Job.this.call();
-                smartFuture.invoke(result);
-                return result;
-            }
-
-        }, seconds, TimeUnit.SECONDS);
+        JobsPlugin.executor.schedule(new JobWrapper<V>(smartFuture, this), seconds, TimeUnit.SECONDS);
 
         return smartFuture;
     }
@@ -183,5 +177,31 @@ public class Job<V> extends Invoker.Invocation implements Callable<V> {
         return this.getClass().getName();
     }
 
-
+    private static class JobWrapper<T> implements Callable<T>
+    {
+    	private String name;
+    	private Promise<T> promise;
+    	private Callable<T> callable;
+    	
+    	public JobWrapper(Promise<T> promise, Callable<T> callable)
+    	{
+    		this.promise = promise;
+    		this.callable = callable;
+    		name = callable.toString();
+    	}
+    	
+    	public T call() throws Exception {
+            T result =  this.callable.call();
+            this.promise.invoke(result);
+            this.promise = null;
+            this.callable = null;
+            return result;
+        }
+    	
+    	@Override
+    	public String toString()
+    	{
+    		return name;
+    	}
+    }
 }

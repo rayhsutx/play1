@@ -16,7 +16,6 @@ import play.Play;
 import play.Play.Mode;
 import play.libs.IO;
 import play.server.ssl.SslHttpServerPipelineFactory;
-import play.vfs.VirtualFile;
 
 public class Server {
 
@@ -160,8 +159,15 @@ public class Server {
             writePID(root);
         }
         Play.init(root, System.getProperty("play.id", ""));
+        Play.httpServerEnabled = Boolean.valueOf(Play.configuration.getProperty("play.server", "true"));
         if (System.getProperty("precompile") == null) {
-            new Server(args);
+        	if (Play.httpServerEnabled)
+        		new Server(args);
+        	else
+        	{
+        		Logger.info("Http Server is disabled, starting application");
+        		Play.start();
+        	}
         } else {
             Logger.info("Done.");
         }
