@@ -73,6 +73,17 @@ public abstract class Service implements Runnable {
 		return stoppedTime;
 	}
 	
+	/**
+	 * Stop service
+	 */
+	public void stopService()
+	{
+	}
+	
+	/**
+	 * Dump service current status and information
+	 * @return
+	 */
 	protected String dump()
 	{
 		return null;

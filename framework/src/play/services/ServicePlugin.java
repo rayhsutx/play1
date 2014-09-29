@@ -75,10 +75,16 @@ public class ServicePlugin extends PlayPlugin {
 
 	@Override
 	public void afterApplicationStart() {
+		if (!"on".equalsIgnoreCase(Play.configuration.getProperty("application.ServicePlugin", "on")))
+		{
+			Logger.info("ServicePlugin disabled");
+			return;
+		}
+		
 		List<Class<?>> serviceClasses = new ArrayList<Class<?>>();
 		for (Class<?> clazz : Play.classloader.getAllClasses()) {
-			String serviceEnabled = Play.configuration.getProperty("application." + clazz.getName() , "true");
-            if (Service.class.isAssignableFrom(clazz) && "true".equalsIgnoreCase(serviceEnabled)) {
+			String serviceEnabled = Play.configuration.getProperty("service." + clazz.getName() , "on");
+            if (Service.class.isAssignableFrom(clazz) && "on".equalsIgnoreCase(serviceEnabled)) {
             	Logger.info("service '%s' loaded", clazz.getName());
                 serviceClasses.add(clazz);
             }
@@ -102,9 +108,18 @@ public class ServicePlugin extends PlayPlugin {
 
 	@Override
 	public void onApplicationStop() {
+		Iterator<Entry<String, ServiceHolder>> iterator = services.entrySet().iterator();
+		while (iterator.hasNext())
+		{
+			Entry<String, ServiceHolder> entry = iterator.next();
+			ServiceHolder holder = entry.getValue();
+			for (Service s : holder.services)
+				s.stopService();
+			holder.services.clear();
+			iterator.remove();
+		}
 		if (executor != null)
-			executor.shutdown();
-		services.clear();
+			executor.shutdownNow();
 	}
 
 	public static int getIndexOfService(Runnable r) {

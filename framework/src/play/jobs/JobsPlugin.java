@@ -96,8 +96,8 @@ public class JobsPlugin extends PlayPlugin {
         List<Class<?>> jobs = new ArrayList<Class<?>>();
         for (Class clazz : Play.classloader.getAllClasses()) {
             if (Job.class.isAssignableFrom(clazz)) {
-            	String jobEnabled = Play.configuration.getProperty("application." + clazz.getName() , "true");
-            	if ("false".equalsIgnoreCase(jobEnabled) || "0".equals(jobEnabled))
+            	String jobEnabled = Play.configuration.getProperty("application." + clazz.getName() , "on");
+            	if (!"on".equalsIgnoreCase(jobEnabled))
             	{
             		Logger.info("job '%s' disabled", clazz.getName());
             		continue;
