@@ -90,6 +90,9 @@ public class ServicePlugin extends PlayPlugin {
             }
         }
 		
+		if (serviceClasses.size() == 0)
+			return;
+		
 		executor = Executors.newFixedThreadPool(serviceClasses.size(), new PThreadFactory("Service"));
 		for (Class<?> clazz : serviceClasses)
 		{
