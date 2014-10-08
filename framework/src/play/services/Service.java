@@ -4,6 +4,8 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Date;
 
+import play.Invoker;
+import play.Invoker.InvocationContext;
 import play.Logger;
 
 /**
@@ -11,8 +13,10 @@ import play.Logger;
  * <br /><br />
  * The service would be disabled by setting 'application.[CLASS_NAME]=false'
  */
-public abstract class Service implements Runnable {
+public abstract class Service extends Invoker.Invocation {
 
+	public static final String invocationType = "service";
+	
 	private volatile long loadedTime;
 	private volatile long startedTime;
 	private volatile long stoppedTime;
@@ -26,15 +30,14 @@ public abstract class Service implements Runnable {
 	
 	@Override
 	public void run() {
-		startedTime = System.currentTimeMillis();
-		isRunning = true;
 		try {
-			startService();
+			if (isJPARequired())
+				super.run();
+			else
+				execute();
 		} catch (Exception e) {
-			Logger.error(e, "error starting service '%s'", this.getClass().getSimpleName());
+			Logger.error(e, "error starting service '%s'", getClass().getName());
 		}
-		isRunning = false;
-		stoppedTime = System.currentTimeMillis();
 	}
 	
 	public boolean isRunning()
@@ -72,12 +75,38 @@ public abstract class Service implements Runnable {
 	{
 		return stoppedTime;
 	}
+
+	@Override
+	public void execute() throws Exception {
+		startedTime = System.currentTimeMillis();
+		isRunning = true;
+		try {
+			startService();
+		} finally {
+			isRunning = false;
+			stoppedTime = System.currentTimeMillis();
+		}
+	}
+
+	@Override
+	public InvocationContext getInvocationContext() {
+		return new InvocationContext(invocationType, this.getClass().getAnnotations());
+	}
 	
 	/**
 	 * Stop service
 	 */
 	public void stopService()
 	{
+	}
+	
+	/**
+	 * Determine whether the service needs JPA or not
+	 * @return true if the service requires JPA, false otherwise
+	 */
+	protected boolean isJPARequired()
+	{
+		return false;
 	}
 	
 	/**
