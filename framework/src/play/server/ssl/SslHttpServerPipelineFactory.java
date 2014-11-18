@@ -22,13 +22,18 @@ public class SslHttpServerPipelineFactory implements ChannelPipelineFactory {
 
         Integer max = Integer.valueOf(Play.configuration.getProperty("play.netty.maxContentLength", "-1"));
         String mode = Play.configuration.getProperty("play.netty.clientAuth", "none");
+        //by default enable only TLS 1, 1.1 and 1.2, possible to override in application.conf
+        String enabledProtocols = Play.configuration.getProperty("play.ssl.enabledProtocols", "TLSv1,TLSv1.1,TLSv1.2");
 
         ChannelPipeline pipeline = pipeline();
 
         // Add SSL handler first to encrypt and decrypt everything.
         SSLEngine engine = SslHttpServerContextFactory.getServerContext().createSSLEngine();
         engine.setUseClientMode(false);
-        
+
+        //Enable protocols based on configuration
+        engine.setEnabledProtocols(enabledProtocols.split(","));
+
         if ("want".equalsIgnoreCase(mode)) {
             engine.setWantClientAuth(true);
         } else if ("need".equalsIgnoreCase(mode)) {
