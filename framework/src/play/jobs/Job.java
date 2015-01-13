@@ -123,7 +123,7 @@ public class Job<V> extends Invoker.Invocation implements Callable<V> {
 
     @Override
     public void run() {
-        call();
+    	call();
     }
 
     public V call() {
@@ -137,7 +137,12 @@ public class Job<V> extends Invoker.Invocation implements Callable<V> {
                     lastException = null;
                     lastRun = System.currentTimeMillis();
                     monitor = MonitorFactory.start(getClass().getName()+".doJob()");
-                    result = doJobWithResult();
+                    try {
+            	    	JobsPlugin.registerRunning(this);
+            	    	result = doJobWithResult();
+                    } finally {
+                    	JobsPlugin.unregisterRunning(this);
+                    }
                     monitor.stop();
                     monitor = null;
                     wasError = false;

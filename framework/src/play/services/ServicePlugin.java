@@ -59,13 +59,12 @@ public class ServicePlugin extends PlayPlugin {
 	        	Entry<String, ServiceHolder> entry = iterator.next();
 	        	String serviceName = entry.getKey();
 	        	ServiceHolder holder = entry.getValue();
-	        	out.println(serviceName);
+	        	out.println("Service - " + serviceName);
+	        	out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 	        	for (int i = 0; i < holder.services.size(); i++)
 	        	{
 	        		Service s = holder.services.get(i);
-		        	out.printf("=======Service %s %d=======\n", serviceName, i);
 		        	out.println(s.getStatus());
-		        	out.printf("=======end of %s %d=======\n", serviceName, i);
 	        	}
 	        }
         }

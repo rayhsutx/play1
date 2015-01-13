@@ -6,6 +6,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.concurrent.*;
 
 import play.Logger;
@@ -23,6 +24,7 @@ public class JobsPlugin extends PlayPlugin {
 
     public static ScheduledThreadPoolExecutor executor = null;
     public static List<Job> scheduledJobs = null;
+    private static ConcurrentHashMap<Long, JobThreadHolder> runningJobs;
 
     @Override
     public String getStatus() {
@@ -87,6 +89,24 @@ public class JobsPlugin extends PlayPlugin {
                 out.println(Java.extractUnderlyingCallable((FutureTask<?>) task) + " will run in " + task.getDelay(TimeUnit.SECONDS) + " seconds");
             }
         }
+        if (runningJobs.size() > 0)
+        {
+        	synchronized (runningJobs) {
+	        	out.println();
+	            out.println("on-going jobs:");
+	            out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+	            Entry<Long, JobThreadHolder>[] entries = runningJobs.entrySet().toArray(new Entry[0]);
+	            long now = System.currentTimeMillis();
+	            for (int i = 0; i < entries.length; i++) {
+	            	Entry<Long, JobThreadHolder> entry = entries[i];
+	            	JobThreadHolder holder = entry.getValue();
+	            	float spent = (float)(now - holder.time) / 1000;
+	            	out.println(i + ". " + holder.job.toString() + " ran at "
+	            			+ new Date(holder.time) + " (spent: " + spent + " seconds)"
+	            			+ " (Thread: " + entry.getKey().longValue() + ")");
+	            }
+        	}
+        }
         return sw.toString();
     }
 
@@ -107,6 +127,7 @@ public class JobsPlugin extends PlayPlugin {
         }
         
         scheduledJobs = new ArrayList<Job>();
+        runningJobs = new ConcurrentHashMap<Long, JobThreadHolder>(executor.getPoolSize());
         for (final Class<?> clazz : jobs) {        	
             // @OnApplicationStart
             if (clazz.isAnnotationPresent(OnApplicationStart.class)) {
@@ -260,5 +281,41 @@ public class JobsPlugin extends PlayPlugin {
         
         executor.shutdownNow();
         executor.getQueue().clear();
+        runningJobs.clear();
+    }
+    
+    static void registerRunning(Job job)
+    {
+    	synchronized (runningJobs) {
+    		Logger.trace("job '%s' registered to run", job);
+    		runningJobs.put(Thread.currentThread().getId(), new JobThreadHolder(job, System.currentTimeMillis()));
+    	}
+    }
+    
+    static void unregisterRunning(Job job)
+    {
+    	synchronized (runningJobs) {
+	    	long id = Thread.currentThread().getId();
+	    	JobThreadHolder holder = runningJobs.get(id);
+	    	if (holder != null)
+	    	{
+	    		runningJobs.remove(id);
+	    		holder.job = null;
+	    		holder.time = 0;
+	    	}
+	    	Logger.trace("job '%s' finished running", job);
+    	}
+    }
+    
+    private static class JobThreadHolder
+    {
+    	public Job job;
+    	public long time;
+    	
+    	public JobThreadHolder(Job job, long time)
+    	{
+    		this.job = job;
+    		this.time = time;
+    	}
     }
 }

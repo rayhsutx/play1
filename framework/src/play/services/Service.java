@@ -56,7 +56,7 @@ public abstract class Service extends Invoker.Invocation {
 			out.printf("stopped: %s\n", new Date(stoppedTime));
 		out.println();
 		String dumped = dump();
-		out.println(dumped != null ? dumped : "(empty)");
+		out.print(dumped != null ? dumped : "(empty)");
 		
 		return sw.toString();
 	}
