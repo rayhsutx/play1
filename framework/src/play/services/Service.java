@@ -3,6 +3,7 @@ package play.services;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Date;
+import java.util.List;
 
 import play.Invoker;
 import play.Invoker.InvocationContext;
@@ -110,12 +111,13 @@ public abstract class Service extends Invoker.Invocation {
 	}
 	
 	/**
-	 * Dump service current status and information
-	 * @return
+	 * Get the list of running services
+	 * @param service the class of service
+	 * @return a list of specified service
 	 */
-	protected String dump()
+	public static List<Service> getServices(Class<? extends Service> service)
 	{
-		return null;
+		return ServicePlugin.getServices(service);
 	}
 	
 	/**
@@ -129,4 +131,23 @@ public abstract class Service extends Invoker.Invocation {
 	 * and it's not running in Play JPA environment.
 	 */
 	protected abstract void startService();
+
+	/**
+	 * Dump service current status and information
+	 * @return
+	 */
+	protected String dump()
+	{
+		return null;
+	}
+	
+	/**
+	 * Get first running service object
+	 * @param service the class of service
+	 * @return the first service object in the list
+	 */
+	public static Service getService(Class<? extends Service> service)
+	{
+		return ServicePlugin.getService(service);
+	}
 }

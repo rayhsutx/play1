@@ -43,6 +43,24 @@ public class ServicePlugin extends PlayPlugin {
 			services.put(className, holder);
 		}
 	}
+	
+	public static Service getService(Class<? extends Service> service)
+	{
+		List<Service> list = getServices(service);
+		if (list != null && !list.isEmpty())
+			return list.get(0);
+		else
+			return null;
+	}
+	
+	public static List<Service> getServices(Class<? extends Service> service)
+	{
+		ServiceHolder holder = services.get(service.getName());
+		if (holder != null)
+			return holder.services;
+		else
+			return null;
+	}
 
 	@Override
 	public final String getStatus() {
