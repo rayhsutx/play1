@@ -146,7 +146,7 @@ public abstract class Service extends Invoker.Invocation {
 	 * @param service the class of service
 	 * @return the first service object in the list
 	 */
-	public static Service getService(Class<? extends Service> service)
+	public static <T> T getService(Class<T extends Service> service)
 	{
 		return ServicePlugin.getService(service);
 	}
