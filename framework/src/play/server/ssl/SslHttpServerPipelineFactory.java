@@ -1,5 +1,7 @@
 package play.server.ssl;
 
+import java.util.ArrayList;
+
 import javax.net.ssl.SSLEngine;
 
 import org.jboss.netty.channel.ChannelPipeline;
@@ -9,10 +11,10 @@ import org.jboss.netty.handler.codec.http.HttpResponseEncoder;
 import org.jboss.netty.handler.ssl.SslHandler;
 import org.jboss.netty.handler.stream.ChunkedWriteHandler;
 
+import play.Logger;
 import play.Play;
 import play.server.FlashPolicyHandler;
 import play.server.StreamChunkAggregator;
-
 import static org.jboss.netty.channel.Channels.pipeline;
 
 
@@ -32,7 +34,24 @@ public class SslHttpServerPipelineFactory implements ChannelPipelineFactory {
         engine.setUseClientMode(false);
 
         //Enable protocols based on configuration
-        engine.setEnabledProtocols(enabledProtocols.split(","));
+        String[] enabledProtocolsArray = enabledProtocols.split(",");
+        String[] supportedProtocols = engine.getSupportedProtocols();
+        ArrayList<String> protocols = new ArrayList<String>();
+        if (enabledProtocolsArray != null && enabledProtocolsArray.length > 0)
+        {
+        	for (String s : supportedProtocols)
+        		Logger.info("protocol: %s", s);
+        	for (String protocol : enabledProtocolsArray)
+        	{
+        		for (String supported : supportedProtocols)
+        		{
+        			if (supported.equals(protocol))
+        				protocols.add(protocol);
+        		}
+        	}
+        }
+        if (protocols.size() > 0)
+        	engine.setEnabledProtocols(protocols.toArray(new String[0]));
 
         if ("want".equalsIgnoreCase(mode)) {
             engine.setWantClientAuth(true);
