@@ -10,6 +10,7 @@ import java.util.Properties;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
+
 import org.apache.log4j.Appender;
 import org.apache.log4j.FileAppender;
 import org.apache.log4j.PatternLayout;
@@ -194,7 +195,6 @@ public class Logger {
            return log4j.isEnabledFor(log4jLevel);
        }
    }
-   
 
     /**
      * Log with TRACE level
@@ -212,7 +212,8 @@ public class Logger {
             } else {
                 try {
                     if (recordCaller) {
-                        org.apache.log4j.Logger.getLogger(getCallerClassName()).trace(format(message, args));
+//                        org.apache.log4j.Logger.getLogger(getCallerClassName()).trace(format(message, args));
+                    	log4j.trace(getCallerClassName() + " " + format(message, args));
                     } else {
                         log4j.trace(format(message, args));
                     }
@@ -239,7 +240,8 @@ public class Logger {
             } else {
                 try {
                     if (recordCaller) {
-                        org.apache.log4j.Logger.getLogger(getCallerClassName()).debug(format(message, args));
+//                        org.apache.log4j.Logger.getLogger(getCallerClassName()).debug(format(message, args));
+                    	log4j.debug(getCallerClassName() + " " + format(message, args));
                     } else {
                         log4j.debug(format(message, args));
                     }
@@ -270,7 +272,8 @@ public class Logger {
                 try {
                     if (!niceThrowable(org.apache.log4j.Level.DEBUG, e, message, args)) {
                         if (recordCaller) {
-                            org.apache.log4j.Logger.getLogger(getCallerClassName()).debug(format(message, args), e);
+//                            org.apache.log4j.Logger.getLogger(getCallerClassName()).debug(format(message, args), e);
+                            log4j.debug(getCallerClassName() + " " + format(message, args), e);
                         } else {
                             log4j.debug(format(message, args), e);
                         }
@@ -301,7 +304,8 @@ public class Logger {
                         // TODO: It is expensive to extract caller-info
                         // we should only do it if we know the message is being
                         // logged (level)
-                        org.apache.log4j.Logger.getLogger(getCallerClassName()).info(format(message, args));
+//                        org.apache.log4j.Logger.getLogger(getCallerClassName()).info(format(message, args));
+                    	log4j.info(getCallerClassName() + " " + format(message, args));
                     } else {
                         log4j.info(format(message, args));
                     }
@@ -332,7 +336,8 @@ public class Logger {
                 try {
                     if (!niceThrowable(org.apache.log4j.Level.INFO, e, message, args)) {
                         if (recordCaller) {
-                            org.apache.log4j.Logger.getLogger(getCallerClassName()).info(format(message, args), e);
+//                            org.apache.log4j.Logger.getLogger(getCallerClassName()).info(format(message, args), e);
+                        	log4j.info(getCallerClassName() + " " + format(message, args), e);
                         } else {
                             log4j.info(format(message, args), e);
                         }
@@ -360,7 +365,8 @@ public class Logger {
             } else {
                 try {
                     if (recordCaller) {
-                        org.apache.log4j.Logger.getLogger(getCallerClassName()).warn(format(message, args));
+//                        org.apache.log4j.Logger.getLogger(getCallerClassName()).warn(format(message, args));
+                    	log4j.warn(getCallerClassName() + " " + format(message, args));
                     } else {
                         log4j.warn(format(message, args));
                     }
@@ -391,7 +397,8 @@ public class Logger {
                 try {
                     if (!niceThrowable(org.apache.log4j.Level.WARN, e, message, args)) {
                         if (recordCaller) {
-                            org.apache.log4j.Logger.getLogger(getCallerClassName()).warn(format(message, args), e);
+//                            org.apache.log4j.Logger.getLogger(getCallerClassName()).warn(format(message, args), e);
+                        	log4j.warn(getCallerClassName() + " " + format(message, args), e);
                         } else {
                             log4j.warn(format(message, args), e);
                         }
@@ -419,7 +426,8 @@ public class Logger {
             } else {
                 try {
                     if (recordCaller) {
-                        org.apache.log4j.Logger.getLogger(getCallerClassName()).error(format(message, args));
+//                        org.apache.log4j.Logger.getLogger(getCallerClassName()).error(format(message, args));
+                    	log4j.error(getCallerClassName() + " " + format(message, args));
                     } else {
                         log4j.error(format(message, args));
                     }
@@ -450,7 +458,8 @@ public class Logger {
                 try {
                     if (!niceThrowable(org.apache.log4j.Level.ERROR, e, message, args)) {
                         if (recordCaller) {
-                            org.apache.log4j.Logger.getLogger(getCallerClassName()).error(format(message, args), e);
+//                            org.apache.log4j.Logger.getLogger(getCallerClassName()).error(format(message, args), e);
+                        	log4j.error(getCallerClassName() + " " + format(message, args), e);
                         } else {
                             log4j.error(format(message, args), e);
                         }
@@ -597,7 +606,8 @@ public class Logger {
                 if (forceJuli || log4j == null) {
                     juli.log(toJuliLevel(level.toString()), sw.toString(), e);
                 } else if (recordCaller) {
-                    org.apache.log4j.Logger.getLogger(getCallerClassName(5)).log(level, sw.toString(), e);
+//                    org.apache.log4j.Logger.getLogger(getCallerClassName(4)).log(level, sw.toString(), e);
+                	log4j.log(level, (getCallerClassName(4)) + " " + sw.toString(), e);
                 } else {
                     log4j.log(level, sw.toString(), e);
                 }
@@ -645,7 +655,7 @@ public class Logger {
      * @return the className of the class actually logging the message
      */
     static String getCallerClassName() {
-        final int level = 5;
+        final int level = 4;
         return getCallerClassName(level);
     }
 
@@ -653,8 +663,10 @@ public class Logger {
      * @return the className of the class actually logging the message
      */
     static String getCallerClassName(final int level) {
-        CallInfo ci = getCallerInformations(level);
-        return ci.className;
+//        CallInfo ci = getCallerInformations(level);
+    	StackTraceElement[] callStack = Thread.currentThread().getStackTrace();
+        StackTraceElement caller = callStack[level];
+        return "(" + caller.getClassName() + ")";
     }
 
     /**
