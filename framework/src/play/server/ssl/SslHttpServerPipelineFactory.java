@@ -39,8 +39,6 @@ public class SslHttpServerPipelineFactory implements ChannelPipelineFactory {
         ArrayList<String> protocols = new ArrayList<String>();
         if (enabledProtocolsArray != null && enabledProtocolsArray.length > 0)
         {
-        	for (String s : supportedProtocols)
-        		Logger.info("protocol: %s", s);
         	for (String protocol : enabledProtocolsArray)
         	{
         		for (String supported : supportedProtocols)

@@ -665,7 +665,20 @@ public class Logger {
     static String getCallerClassName(final int level) {
 //        CallInfo ci = getCallerInformations(level);
     	StackTraceElement[] callStack = Thread.currentThread().getStackTrace();
-        StackTraceElement caller = callStack[level];
+    	StackTraceElement caller = null;
+    	if (callStack.length <= level)
+    	{
+    		for (int i = 1; i < callStack.length; i++)
+    		{
+    			if (!callStack[i].getClassName().equalsIgnoreCase("play.Logger"))
+    			{
+    				caller = callStack[i];
+    				break;
+    			}
+    		}
+    	}
+    	else
+    		caller = callStack[level];
         return "(" + caller.getClassName() + ")";
     }
 
