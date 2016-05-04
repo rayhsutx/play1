@@ -1,8 +1,17 @@
 package play;
 
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URL;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardWatchEventKinds;
+import java.nio.file.WatchEvent;
+import java.nio.file.WatchKey;
+import java.nio.file.WatchService;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,6 +59,10 @@ public class Logger {
      * true if logger is configured manually (log4j-config file supplied by application)
      */
     public static boolean configuredManually = false;
+    /**
+     * The log4j.properties modifying monitor
+     */
+    private static WatchKey key;
 
     /**
      * Try to init stuff.
@@ -78,6 +91,58 @@ public class Logger {
                 DOMConfigurator.configure(log4jConf);
             } else {
                 PropertyConfigurator.configure(log4jConf);
+            	if (key == null)
+            	{
+            		final WatchService watcher;
+	                try {
+	                	final String file = log4jConf.getFile();
+	                	final String dir = file.substring(0, file.lastIndexOf("/"));
+	                	watcher = FileSystems.getDefault().newWatchService();
+						key = Paths.get(dir).register(watcher,
+								StandardWatchEventKinds.ENTRY_MODIFY);
+						
+						Thread th = new Thread(new Runnable(){
+
+							@Override
+							public void run() {
+								while (true)
+								{
+									try {
+										WatchKey k = watcher.take();
+										for (WatchEvent<?> event: k.pollEvents())
+										{
+											WatchEvent.Kind<?> kind = event.kind();
+											if (kind == StandardWatchEventKinds.OVERFLOW)
+												continue;
+											
+											if (kind == StandardWatchEventKinds.ENTRY_MODIFY)
+											{
+												Path path = (Path) event.context();
+												if (file.endsWith(path.toString()))
+												{
+													Logger.info("Detected file %s changed", file);
+													PropertyConfigurator.configure(file);
+												}
+											}
+										}
+										if (!k.reset())
+										{
+											Logger.error("error resetting log watcher");
+											break;
+										}
+									} catch (InterruptedException e) {
+										e.printStackTrace();
+									}
+								}
+							}
+		                	
+		                }, "log4j-watcher");
+						th.setDaemon(true);
+						th.start();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+            	}
             }
             Logger.log4j = org.apache.log4j.Logger.getLogger("play");
             // In test mode, append logs to test-result/application.log
