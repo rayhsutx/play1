@@ -47,6 +47,7 @@ import play.mvc.results.NotFound;
  * Invoke an action after an HTTP request.
  */
 public class ActionInvoker {
+    private static org.apache.log4j.Logger invalidRequestLogger = org.apache.log4j.Logger.getLogger("invalidrequest");
 
     @SuppressWarnings("unchecked")
     public static void resolve(Http.Request request, Http.Response response) {
@@ -97,10 +98,20 @@ public class ActionInvoker {
             request.resolved = true;
 
         } catch (ActionNotFoundException e) {
-            Logger.error(e, "%s action not found", e.getAction());
+            invalidRequest(request);
+            //Logger.error(e, "%s action not found", e.getAction());
             throw new NotFound(String.format("%s action not found", e.getAction()));
         }
 
+    }
+    
+    private static void invalidRequest(Http.Request request) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("[invalid request] ").append("\"").append(request.url).append("\"");
+        sb.append(" -- ").append("\"").append(request.remoteAddress).append("\"");
+        String msg = sb.toString();
+        
+        invalidRequestLogger.warn(msg);
     }
 
     public static void invoke(Http.Request request, Http.Response response) {
