@@ -1,5 +1,6 @@
 package play;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -96,7 +97,7 @@ public class Logger {
             		final WatchService watcher;
 	                try {
 	                	final String file = log4jConf.getFile();
-	                	final String dir = file.substring(0, file.lastIndexOf("/"));
+	                	final String dir = file.substring(0, file.lastIndexOf(File.separator));
 	                	watcher = FileSystems.getDefault().newWatchService();
 						key = Paths.get(dir).register(watcher,
 								StandardWatchEventKinds.ENTRY_MODIFY);
